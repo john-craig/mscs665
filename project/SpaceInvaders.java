@@ -1,5 +1,4 @@
-package i1SpaceInvaders;
-
+package project;
 import javax.swing.JFrame;
 
 @SuppressWarnings("serial")

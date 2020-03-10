@@ -1,4 +1,4 @@
-package lab06;
+package lab7;
 
 import java.awt.Image;
 
