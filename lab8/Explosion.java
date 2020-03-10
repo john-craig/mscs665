@@ -15,7 +15,7 @@ public class Explosion {
 	// Sprite sheet was found here https://pngimage.net/explosion-sprite-png-3/.
 	// Use static storage since we only need to instantiate the sheet once
 	protected static SpriteSheet sheet =
-			new SpriteSheet("src/res/spritesheet1.png",FRAME_WIDTH, FRAME_HEIGHT); 
+			new SpriteSheet("/res/spritesheet1.png",FRAME_WIDTH, FRAME_HEIGHT); 
 	
 	/**
 	 * Constructor

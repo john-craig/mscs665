@@ -34,7 +34,7 @@ public class SpriteSheet {
 	 */
 	public SpriteSheet(String path, int frameWidth, int frameHeight) {
 		// Open the sheet
-		Image img = new ImageIcon(path).getImage();
+		Image img = new ImageIcon(this.getClass().getResource(path)).getImage();
 		
 		// Get its width and height
 		int imgw = img.getWidth(null);

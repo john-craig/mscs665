@@ -170,7 +170,7 @@ public class Board extends JPanel implements ActionListener {
                 Rectangle r2 = a.getBounds();
 
                 if (r1.intersects(r2)) {
-                    m.setVisible(false);
+                    m.setExploding(true);
                     a.setVisible(false);
                 }
             }
