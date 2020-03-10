@@ -286,7 +286,7 @@ public class Board extends JPanel implements Runnable, Commons {
                         ImageIcon ii = 
                             new ImageIcon(this.getClass().getResource(expl));
                         player.setImage(ii.getImage());
-                        player.setDying(true);
+                        player.loseLife();
                         b.setDestroyed(true);;
                     }
             }

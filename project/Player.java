@@ -1,7 +1,6 @@
 package project;
 
 import java.awt.event.KeyEvent;
-
 import javax.swing.ImageIcon;
 
 
@@ -12,12 +11,15 @@ public class Player extends Sprite implements Commons{
 
     private final String player = "/res/player.png";
     private int width;
+    private int lives;
 
     public Player() {
 
         ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
 
-        width = ii.getImage().getWidth(null); 
+        width = ii.getImage().getWidth(null);
+        
+        lives = 3;
 
         setImage(ii.getImage());
         setX(START_X);
@@ -31,6 +33,18 @@ public class Player extends Sprite implements Commons{
         if (x >= BOARD_WIDTH - 2*width) 
             x = BOARD_WIDTH - 2*width;
     }
+    
+    public void loseLife() {
+    	lives--;
+    	
+    	if(this.isDead()) {
+    		this.setDying(true);
+    	}
+    }
+    
+    public int getLives() {return lives;}
+    
+    public Boolean isDead() {return (lives > 0);}
 
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
