@@ -145,6 +145,40 @@ public class Board extends JPanel implements Runnable, Commons {
       g.dispose();
     }
 
+    public void gameStart()
+    {
+
+        Graphics g = this.getGraphics();
+
+        g.setColor(Color.black);
+        g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGTH);
+
+        g.setColor(new Color(0, 32, 48));
+        g.fillRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
+        g.setColor(Color.white);
+        g.drawRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
+
+        Font small = new Font("Helvetica", Font.BOLD, 14);
+        FontMetrics metr = this.getFontMetrics(small);
+
+        String title = "Void Invaders";
+        
+        g.setColor(Color.white);
+        g.setFont(small);
+        g.drawString(title, (BOARD_WIDTH - metr.stringWidth(title))/2, 
+            BOARD_WIDTH/2);
+        
+        Font verySmall = new Font("Helvetica", Font.BOLD, 10);
+        FontMetrics vMetr = this.getFontMetrics(verySmall);
+
+        String instructions = "Press Space to Start\nPress Q to Quit";
+        
+        g.setColor(Color.white);
+        g.setFont(small);
+        g.drawString(title, (BOARD_WIDTH - metr.stringWidth(title))/2, 
+            BOARD_WIDTH / 4 * 2);
+    }
+    
     public void gameOver()
     {
 
