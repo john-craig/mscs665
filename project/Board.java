@@ -28,7 +28,8 @@ public class Board extends JPanel implements Runnable, Commons {
     private int direction = -1;
     private int deaths = 0;
 
-    private boolean ingame = true;
+    private boolean ingame = false;
+    private boolean pregame = true;
     private final String expl = "/res/explosion.png";
     private final String alienpix = "/res/aliens.png";
     private String message = "Game Over";
@@ -69,7 +70,7 @@ public class Board extends JPanel implements Runnable, Commons {
         player = new Player();
         shot = new Shot();
 
-        if (animator == null || !ingame) {
+        if (animator == null || !pregame) {
             animator = new Thread(this);
             animator.start();
         }
@@ -132,6 +133,10 @@ public class Board extends JPanel implements Runnable, Commons {
       g.fillRect(0, 0, d.width, d.height);
       g.setColor(Color.green);   
 
+      if (pregame) {
+    	  gameStart(g);
+      }
+      
       if (ingame) {
 
         g.drawLine(0, GROUND, BOARD_WIDTH, GROUND);
@@ -140,15 +145,17 @@ public class Board extends JPanel implements Runnable, Commons {
         drawShot(g);
         drawBombing(g);
       }
+      
+      if(!pregame && !ingame) {
+    	  gameOver(g);
+      }
 
       Toolkit.getDefaultToolkit().sync();
       g.dispose();
     }
 
-    public void gameStart()
+    public void gameStart(Graphics g)
     {
-
-        Graphics g = this.getGraphics();
 
         g.setColor(Color.black);
         g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGTH);
@@ -171,18 +178,16 @@ public class Board extends JPanel implements Runnable, Commons {
         Font verySmall = new Font("Helvetica", Font.BOLD, 10);
         FontMetrics vMetr = this.getFontMetrics(verySmall);
 
-        String instructions = "Press Space to Start\nPress Q to Quit";
+        String instructions = "Press Space to Start, Press Q to Quit";
         
         g.setColor(Color.white);
-        g.setFont(small);
-        g.drawString(title, (BOARD_WIDTH - metr.stringWidth(title))/2, 
-            BOARD_WIDTH / 4 * 2);
+        g.setFont(verySmall);
+        g.drawString(instructions, (BOARD_WIDTH - vMetr.stringWidth(instructions))/2, 
+            (BOARD_WIDTH / 4) * 3);
     }
     
-    public void gameOver()
+    public void gameOver(Graphics g)
     {
-
-        Graphics g = this.getGraphics();
 
         g.setColor(Color.black);
         g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGTH);
@@ -339,6 +344,10 @@ public class Board extends JPanel implements Runnable, Commons {
         long beforeTime, timeDiff, sleep;
 
         beforeTime = System.currentTimeMillis();
+        
+        while(pregame) {
+        	repaint();
+        }
 
         while (ingame) {
             repaint();
@@ -356,7 +365,6 @@ public class Board extends JPanel implements Runnable, Commons {
             }
             beforeTime = System.currentTimeMillis();
         }
-        gameOver();
     }
 
     private class TAdapter extends KeyAdapter {
@@ -372,6 +380,17 @@ public class Board extends JPanel implements Runnable, Commons {
           int x = player.getX();
           int y = player.getY();
 
+          if(e.getKeyCode() == KeyEvent.VK_Q) {
+        	  System.exit(0);
+          }
+          
+          if (pregame) {
+        	  if(e.getKeyCode() == KeyEvent.VK_SPACE) {
+        		  pregame = false;
+        		  ingame = true;
+        	  }
+          }
+          
           if (ingame)
           {
             if (e.isAltDown()) {
