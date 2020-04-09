@@ -44,7 +44,7 @@ public class Player extends Sprite implements Commons{
     
     public int getLives() {return lives;}
     
-    public Boolean isDead() {return (lives > 0);}
+    public Boolean isDead() {return (lives <= 0);}
 
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();

@@ -27,6 +27,7 @@ public class Board extends JPanel implements Runnable, Commons {
     private int alienY = 5;
     private int direction = -1;
     private int deaths = 0;
+    private int shotsFired = 0;
 
     private boolean ingame = false;
     private boolean pregame = true;
@@ -125,6 +126,32 @@ public class Board extends JPanel implements Runnable, Commons {
         }
     }
 
+    public void drawFeedback(Graphics g) {
+    	Font verySmall = new Font("Helvetica", Font.BOLD, 10);
+        FontMetrics vMetr = this.getFontMetrics(verySmall);
+        
+        String playerLives = "Lives: " + player.getLives();
+        String hitRatio;
+        
+        if(shotsFired == 0) {
+        	 hitRatio = "Hit Ratio: 0%";
+        } else {
+        	 hitRatio = "Hit Ratio: " + ((double)(deaths) / shotsFired) * 100.0 +"%";
+        }
+        
+        String currentScore = "Score: " + deaths;
+        		
+        int y_offset = vMetr.getHeight() -2;
+        
+        g.setColor(Color.white);
+        g.setFont(verySmall);
+        
+        g.drawString(playerLives, 1, y_offset);
+        g.drawString(hitRatio, (BOARD_WIDTH - vMetr.stringWidth(hitRatio)) / 2, y_offset);
+        g.drawString(currentScore, BOARD_WIDTH - ((vMetr.stringWidth(currentScore) * 2)), y_offset);
+
+    }
+    
     public void paint(Graphics g)
     {
       super.paint(g);
@@ -144,6 +171,8 @@ public class Board extends JPanel implements Runnable, Commons {
         drawPlayer(g);
         drawShot(g);
         drawBombing(g);
+        
+        drawFeedback(g);
       }
       
       if(!pregame && !ingame) {
@@ -204,6 +233,22 @@ public class Board extends JPanel implements Runnable, Commons {
         g.setFont(small);
         g.drawString(message, (BOARD_WIDTH - metr.stringWidth(message))/2, 
             BOARD_WIDTH/2);
+        
+        Font verySmall = new Font("Helvetica", Font.BOLD, 10);
+        FontMetrics vMetr = this.getFontMetrics(verySmall);
+
+        int highscore_num = 99;
+        String player_name = "AAA";
+        
+        String highscore = "Highscore: " + highscore_num;
+        String initials = "Set By: " + player_name;
+        
+        g.setFont(verySmall);
+        g.drawString(highscore, (BOARD_WIDTH - vMetr.stringWidth(highscore))/2, 
+            (BOARD_WIDTH / 4) * 3);
+
+        g.drawString(initials, (BOARD_WIDTH - vMetr.stringWidth(initials))/2, 
+            (int) (((BOARD_WIDTH / 4) * 3) + (vMetr.getHeight() * 1.2)));
     }
 
     public void animationCycle()  {
@@ -326,7 +371,7 @@ public class Board extends JPanel implements Runnable, Commons {
                             new ImageIcon(this.getClass().getResource(expl));
                         player.setImage(ii.getImage());
                         player.loseLife();
-                        b.setDestroyed(true);;
+                        b.setDestroyed(true);
                     }
             }
 
@@ -390,12 +435,12 @@ public class Board extends JPanel implements Runnable, Commons {
         		  ingame = true;
         	  }
           }
-          
-          if (ingame)
+          else if (ingame)
           {
-            if (e.isAltDown()) {
+            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                 if (!shot.isVisible())
                     shot = new Shot(x, y);
+                	shotsFired++;
             }
           }
         }
