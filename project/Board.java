@@ -20,6 +20,7 @@ public class Board extends JPanel implements Runnable, Commons {
 
     private Dimension d;
     private ArrayList aliens;
+    private Mothership mothership;
     private Player player;
     private Shot shot;
 
@@ -27,6 +28,7 @@ public class Board extends JPanel implements Runnable, Commons {
     private int alienY = 5;
     private int direction = -1;
     private int deaths = 0;
+    private int score = 0;
     private int shotsFired = 0;
 
     private boolean ingame = false;
@@ -55,18 +57,19 @@ public class Board extends JPanel implements Runnable, Commons {
     }
 
     public void gameInit() {
-
-        aliens = new ArrayList();
+    	aliens = new ArrayList();
 
         ImageIcon ii = new ImageIcon(this.getClass().getResource(alienpix));
-
+        
         for (int i=0; i < 4; i++) {
-            for (int j=0; j < 6; j++) {
+            for (int j=0; j < 5; j++) {
                 Alien alien = new Alien(alienX + 18*j, alienY + 18*i);
                 alien.setImage(ii.getImage());
                 aliens.add(alien);
             }
         }
+    	
+    	mothership = new Mothership(-30, 0, aliens);
 
         player = new Player();
         shot = new Shot();
@@ -75,6 +78,16 @@ public class Board extends JPanel implements Runnable, Commons {
             animator = new Thread(this);
             animator.start();
         }
+    }
+    
+    public void drawMothership(Graphics g) {
+    	if(mothership.isVisible()) {
+    		g.drawImage(mothership.getImage(), mothership.getX(), mothership.getY(), this);
+    	}
+    	
+    	if(mothership.isDying()) {
+    		mothership.die();
+    	}
     }
 
     public void drawAliens(Graphics g) 
@@ -139,7 +152,7 @@ public class Board extends JPanel implements Runnable, Commons {
         	 hitRatio = "Hit Ratio: " + ((double)(deaths) / shotsFired) * 100.0 +"%";
         }
         
-        String currentScore = "Score: " + deaths;
+        String currentScore = "Score: " + score;
         		
         int y_offset = vMetr.getHeight() -2;
         
@@ -167,6 +180,7 @@ public class Board extends JPanel implements Runnable, Commons {
       if (ingame) {
 
         g.drawLine(0, GROUND, BOARD_WIDTH, GROUND);
+        drawMothership(g);
         drawAliens(g);
         drawPlayer(g);
         drawShot(g);
@@ -253,12 +267,12 @@ public class Board extends JPanel implements Runnable, Commons {
 
     public void animationCycle()  {
 
-        if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
+        if (deaths == (aliens.size() + 1)) {
             ingame = false;
             message = "Game won!";
         }
 
-        // player
+        //player
 
         player.act();
 
@@ -267,7 +281,7 @@ public class Board extends JPanel implements Runnable, Commons {
             Iterator it = aliens.iterator();
             int shotX = shot.getX();
             int shotY = shot.getY();
-
+            
             while (it.hasNext()) {
                 Alien alien = (Alien) it.next();
                 int alienX = alien.getX();
@@ -283,9 +297,28 @@ public class Board extends JPanel implements Runnable, Commons {
                             alien.setImage(ii.getImage());
                             alien.setDying(true);
                             deaths++;
+                            score++;
                             shot.die();
                         }
                 }
+            }
+            
+            if(mothership.isVisible() && shot.isVisible()) {
+            	int mothershipX = mothership.getX();
+            	int mothershipY = mothership.getY();
+            	
+            	if (shotX >= (mothershipX) && 
+                        shotX <= (mothershipX + MOTHERSHIP_WIDTH) &&
+                        shotY >= (mothershipY) &&
+                        shotY <= (mothershipY+MOTHERSHIP_HEIGHT) ) {
+                            ImageIcon ii = 
+                                new ImageIcon(getClass().getResource(expl));
+                            mothership.setImage(ii.getImage());
+                            mothership.setDying(true);
+                            deaths++;
+                            score+=10;
+                            shot.die();
+                        }
             }
 
             int y = shot.getY();
@@ -295,6 +328,11 @@ public class Board extends JPanel implements Runnable, Commons {
             else shot.setY(y);
         }
 
+        // mothership
+        if(mothership.isVisible()) {
+        	mothership.act();
+        }
+        
         // aliens
 
          Iterator it1 = aliens.iterator();
@@ -367,9 +405,6 @@ public class Board extends JPanel implements Runnable, Commons {
                     bombX <= (playerX+PLAYER_WIDTH) &&
                     bombY >= (playerY) && 
                     bombY <= (playerY+PLAYER_HEIGHT) ) {
-                        ImageIcon ii = 
-                            new ImageIcon(this.getClass().getResource(expl));
-                        player.setImage(ii.getImage());
                         player.loseLife();
                         b.setDestroyed(true);
                     }
