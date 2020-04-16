@@ -15,6 +15,9 @@ import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
+import sf.Sound;
+import sf.SoundFactory;
+
 @SuppressWarnings({"serial", "rawtypes", "unchecked"})
 public class Board extends JPanel implements Runnable, Commons { 
 
@@ -35,8 +38,17 @@ public class Board extends JPanel implements Runnable, Commons {
     private boolean pregame = true;
     private final String expl = "/res/explosion.png";
     private final String alienpix = "/res/aliens.png";
+    private final String alien_fires = "./res/alien_fires.wav";
+    private final String player_fires = "./res/player_fires.wav";
+    private final String alien_explodes = "./res/alien_explosion.wav";
+    private final String bomb_lands = "./res/bombs_landing.wav";
+    private final String shot_collision = "./res/shot_collision.wav";
+    private final String player_hit = "./res/player_hit.wav";
+    private final String spaceship_woosh = "./res/spaceship_woosh.wav";
+    
+    
     private String message = "Game Over";
-
+    
     private Thread animator;
 
     public Board() 
@@ -286,6 +298,24 @@ public class Board extends JPanel implements Runnable, Commons {
                 Alien alien = (Alien) it.next();
                 int alienX = alien.getX();
                 int alienY = alien.getY();
+                
+                Alien.Bomb b = alien.getBomb();
+               
+                int bombX = b.getX();
+                int bombY = b.getY();
+
+                if (!b.isDestroyed()) {
+                    if ( (bombX + 2) >= (shotX) && 
+                        bombX <= (shotX + 2) &&
+                        bombY >= (shotY) && 
+                        bombY <= (shotY) ) {
+                    		shot.die();
+                            b.setDestroyed(true);
+                    		
+                    		Sound sound = SoundFactory.getInstance(shot_collision);
+                            SoundFactory.play(sound);
+                        }
+                }
 
                 if (alien.isVisible() && shot.isVisible()) {
                     if (shotX >= (alienX) && 
@@ -299,6 +329,9 @@ public class Board extends JPanel implements Runnable, Commons {
                             deaths++;
                             score++;
                             shot.die();
+                            
+                            Sound sound = SoundFactory.getInstance(alien_explodes);
+                            SoundFactory.play(sound);
                         }
                 }
             }
@@ -318,6 +351,9 @@ public class Board extends JPanel implements Runnable, Commons {
                             deaths++;
                             score+=10;
                             shot.die();
+                            
+                            Sound sound = SoundFactory.getInstance(alien_explodes);
+                            SoundFactory.play(sound);
                         }
             }
 
@@ -347,6 +383,9 @@ public class Board extends JPanel implements Runnable, Commons {
                  while (i1.hasNext()) {
                      Alien a2 = (Alien) i1.next();
                      a2.setY(a2.getY() + GO_DOWN);
+                     
+                     Sound sound = SoundFactory.getInstance(spaceship_woosh);
+                     SoundFactory.play(sound);
                  }
              }
 
@@ -357,6 +396,9 @@ public class Board extends JPanel implements Runnable, Commons {
                 while (i2.hasNext()) {
                     Alien a = (Alien)i2.next();
                     a.setY(a.getY() + GO_DOWN);
+                    
+                    Sound sound = SoundFactory.getInstance(spaceship_woosh);
+                    SoundFactory.play(sound);
                 }
             }
         }
@@ -393,6 +435,12 @@ public class Board extends JPanel implements Runnable, Commons {
                 b.setDestroyed(false);
                 b.setX(a.getX());
                 b.setY(a.getY());   
+                
+                if(!i3.hasNext()) {
+                	//Play the sound on the last bomb being "spawned"
+                	 Sound sound = SoundFactory.getInstance(alien_fires);
+                     SoundFactory.play(sound);
+                }
             }
 
             int bombX = b.getX();
@@ -407,15 +455,25 @@ public class Board extends JPanel implements Runnable, Commons {
                     bombY <= (playerY+PLAYER_HEIGHT) ) {
                         player.loseLife();
                         b.setDestroyed(true);
+                        
+                        Sound sound = SoundFactory.getInstance(player_hit);
+                        SoundFactory.play(sound);
                     }
             }
-
+            
             if (!b.isDestroyed()) {
                 b.setY(b.getY() + 1);   
                 if (b.getY() >= GROUND - BOMB_HEIGHT) {
                     b.setDestroyed(true);
+                    
+                    if(!i3.hasNext()) {
+                    	//Play the sound on the last bomb is hitting the ground
+                    	 Sound sound = SoundFactory.getInstance(bomb_lands);
+                         SoundFactory.play(sound);
+                    }
                 }
             }
+            
         }
     }
 
@@ -476,6 +534,9 @@ public class Board extends JPanel implements Runnable, Commons {
                 if (!shot.isVisible())
                     shot = new Shot(x, y);
                 	shotsFired++;
+                	Sound sound = SoundFactory.getInstance(player_fires);
+                	SoundFactory.play(sound);
+
             }
           }
         }
