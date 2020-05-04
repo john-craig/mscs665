@@ -22,6 +22,9 @@ import sf.SoundFactory;
 public class Board extends JPanel implements Runnable, Commons { 
 
     private Dimension d;
+    private ArrayList blasts;
+    private ArrayList barriers;
+    private ArrayList xenos;
     private ArrayList aliens;
     private Mothership mothership;
     private Player player;
@@ -69,7 +72,10 @@ public class Board extends JPanel implements Runnable, Commons {
     }
 
     public void gameInit() {
+    	blasts = new ArrayList();
+    	barriers = new ArrayList();
     	aliens = new ArrayList();
+    	xenos = new ArrayList();
 
         ImageIcon ii = new ImageIcon(this.getClass().getResource(alienpix));
         
@@ -83,6 +89,14 @@ public class Board extends JPanel implements Runnable, Commons {
     	
     	mothership = new Mothership(-30, 0, aliens);
 
+    	for (int i=0; i < 3; i++) {
+    		int barrierY = GROUND - 30;
+    		int barrierX = (((BOARD_WIDTH / 3) - BARRIER_WIDTH) / 2) + ((BOARD_WIDTH / 3) * i);
+    		
+    		Barrier barrier = new Barrier(barrierX, barrierY);
+    		barriers.add(barrier);
+    	}
+    	
         player = new Player();
         shot = new Shot();
 
@@ -90,6 +104,23 @@ public class Board extends JPanel implements Runnable, Commons {
             animator = new Thread(this);
             animator.start();
         }
+    }
+    
+    public void drawBlasts(Graphics g) {
+        Iterator bl = blasts.iterator();
+        		
+       while (bl.hasNext()) {
+    	   Blast blast = (Blast) bl.next();
+    	   
+    	   if(blast.isVisible()) {
+    		   g.drawImage(blast.getImage(), blast.getX(), blast.getY(), this);
+    	   }
+    	   
+    	   if(blast.isDying()) {
+    		   blast.die();
+    	   }
+    			  
+       }
     }
     
     public void drawMothership(Graphics g) {
@@ -118,6 +149,24 @@ public class Board extends JPanel implements Runnable, Commons {
             }
         }
     }
+    
+    public void drawXenos(Graphics g) 
+    {
+        Iterator xe = xenos.iterator();
+
+        while (xe.hasNext()) {
+            Alien xenos = (Alien) xe.next();
+
+            if (xenos.isVisible()) {
+                g.drawImage(xenos.getImage(), xenos.getX(), xenos.getY(), this);
+            }
+
+            if (xenos.isDying()) {
+            	xenos.die();
+            }
+        }
+    }
+
 
     public void drawPlayer(Graphics g) {
 
@@ -151,6 +200,23 @@ public class Board extends JPanel implements Runnable, Commons {
         }
     }
 
+    public void drawBarriers(Graphics g)
+    {
+        Iterator ba = barriers.iterator();
+
+        while (ba.hasNext()) {
+            Barrier barrier = (Barrier)ba.next();
+
+            if (barrier.isVisible()) {
+                g.drawImage(barrier.getImage(), barrier.getX(), barrier.getY(), this);
+            }
+
+            if (barrier.isDying()) {
+            	barrier.die();
+            }
+        }
+    }
+    
     public void drawFeedback(Graphics g) {
     	Font verySmall = new Font("Helvetica", Font.BOLD, 10);
         FontMetrics vMetr = this.getFontMetrics(verySmall);
@@ -192,11 +258,14 @@ public class Board extends JPanel implements Runnable, Commons {
       if (ingame) {
 
         g.drawLine(0, GROUND, BOARD_WIDTH, GROUND);
+        drawBarriers(g);
         drawMothership(g);
         drawAliens(g);
+        drawXenos(g);
         drawPlayer(g);
         drawShot(g);
         drawBombing(g);
+        drawBlasts(g);
         
         drawFeedback(g);
       }
@@ -311,6 +380,8 @@ public class Board extends JPanel implements Runnable, Commons {
                         bombY <= (shotY) ) {
                     		shot.die();
                             b.setDestroyed(true);
+                            
+                            blasts.add(new Blast(shotX, shotY));
                     		
                     		Sound sound = SoundFactory.getInstance(shot_collision);
                             SoundFactory.play(sound);
@@ -329,6 +400,8 @@ public class Board extends JPanel implements Runnable, Commons {
                             deaths++;
                             score++;
                             shot.die();
+                            
+                            blasts.add(new Blast(shotX, shotY));
                             
                             Sound sound = SoundFactory.getInstance(alien_explodes);
                             SoundFactory.play(sound);
@@ -352,9 +425,28 @@ public class Board extends JPanel implements Runnable, Commons {
                             score+=10;
                             shot.die();
                             
+                            blasts.add(new Blast(shotX, shotY));
+                            
                             Sound sound = SoundFactory.getInstance(alien_explodes);
                             SoundFactory.play(sound);
                         }
+            }
+            
+            it = barriers.iterator();
+            
+            while(it.hasNext()) {
+            	Barrier barrier = (Barrier)it.next();
+            	int barX = barrier.getX();
+            	int barY = barrier.getY();
+            	
+            	if(barrier.isVisible() && shot.isVisible()) {
+            		if (shotX >= (barX) && 
+                            shotX <= (barX + BARRIER_WIDTH) &&
+                            shotY <= (barY)) {
+                                shot.die();
+                                barrier.takeHit();
+                            }
+            	}
             }
 
             int y = shot.getY();
@@ -362,6 +454,14 @@ public class Board extends JPanel implements Runnable, Commons {
             if (y < 0)
                 shot.die();
             else shot.setY(y);
+        }
+        
+        //blasts
+        Iterator bl = blasts.iterator();
+        
+        while (bl.hasNext()) {
+        	Blast blast = (Blast) bl.next();
+        	blast.act();
         }
 
         // mothership
@@ -456,9 +556,28 @@ public class Board extends JPanel implements Runnable, Commons {
                         player.loseLife();
                         b.setDestroyed(true);
                         
+                        blasts.add(new Blast(bombX, bombY));
+                        
                         Sound sound = SoundFactory.getInstance(player_hit);
                         SoundFactory.play(sound);
                     }
+            }
+            
+            it = barriers.iterator();
+            
+            while(it.hasNext()) {
+            	Barrier barrier = (Barrier)it.next();
+            	int barX = barrier.getX();
+            	int barY = barrier.getY();
+            	
+            	if(barrier.isVisible() && b.isVisible()) {
+            		if (bombX >= (barX) && 
+                            bombX <= (barX + BARRIER_WIDTH) &&
+                            bombY >= (barY)) {
+                                b.setDestroyed(true);
+                                barrier.takeHit();
+                            }
+            	}
             }
             
             if (!b.isDestroyed()) {
