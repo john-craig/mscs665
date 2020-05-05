@@ -24,7 +24,7 @@ public class Board extends JPanel implements Runnable, Commons {
     private Dimension d;
     private ArrayList blasts;
     private ArrayList barriers;
-    private ArrayList xenos;
+    private ArrayList escorts;
     private ArrayList aliens;
     private Mothership mothership;
     private Player player;
@@ -75,7 +75,7 @@ public class Board extends JPanel implements Runnable, Commons {
     	blasts = new ArrayList();
     	barriers = new ArrayList();
     	aliens = new ArrayList();
-    	xenos = new ArrayList();
+    	escorts = new ArrayList();
 
         ImageIcon ii = new ImageIcon(this.getClass().getResource(alienpix));
         
@@ -88,6 +88,14 @@ public class Board extends JPanel implements Runnable, Commons {
         }
     	
     	mothership = new Mothership(-30, 0, aliens);
+    	
+    	for (int i=0; i<4;i++) {
+    		int relative_x = -30 + (i * 27);
+    		int relative_y = (i % 3 > 0) ? 30 : 0;
+    		
+    		Escort escort = new Escort(mothership, relative_x, relative_y);
+    		escorts.add(escort);
+    	}
 
     	for (int i=0; i < 3; i++) {
     		int barrierY = GROUND - 30;
@@ -131,6 +139,20 @@ public class Board extends JPanel implements Runnable, Commons {
     	if(mothership.isDying()) {
     		mothership.die();
     	}
+    	
+    	Iterator es = escorts.iterator();
+
+        while (es.hasNext()) {
+            Escort escort = (Escort) es.next();
+
+            if (escort.isVisible()) {
+                g.drawImage(escort.getImage(), escort.getX(), escort.getY(), this);
+            }
+
+            if (escort.isDying()) {
+            	escort.die();
+            }
+        }
     }
 
     public void drawAliens(Graphics g) 
@@ -146,23 +168,6 @@ public class Board extends JPanel implements Runnable, Commons {
 
             if (alien.isDying()) {
                 alien.die();
-            }
-        }
-    }
-    
-    public void drawXenos(Graphics g) 
-    {
-        Iterator xe = xenos.iterator();
-
-        while (xe.hasNext()) {
-            Alien xenos = (Alien) xe.next();
-
-            if (xenos.isVisible()) {
-                g.drawImage(xenos.getImage(), xenos.getX(), xenos.getY(), this);
-            }
-
-            if (xenos.isDying()) {
-            	xenos.die();
             }
         }
     }
@@ -261,7 +266,6 @@ public class Board extends JPanel implements Runnable, Commons {
         drawBarriers(g);
         drawMothership(g);
         drawAliens(g);
-        drawXenos(g);
         drawPlayer(g);
         drawShot(g);
         drawBombing(g);
@@ -432,6 +436,32 @@ public class Board extends JPanel implements Runnable, Commons {
                         }
             }
             
+            Iterator es = escorts.iterator();
+
+            while (es.hasNext()) {
+                Escort escort = (Escort) es.next();
+                int escortX = escort.getX();
+                int escortY = escort.getY();
+
+                if (shotX >= (escortX) && 
+                        shotX <= (escortX + ALIEN_WIDTH) &&
+                        shotY >= (escortY) &&
+                        shotY <= (escortY+ ALIEN_HEIGHT) ) {
+//                            ImageIcon ii = 
+//                                new ImageIcon(getClass().getResource(expl));
+//                            escort.setImage(ii.getImage());
+                            escort.setDying(true);
+                            deaths++;
+                            score++;
+                            shot.die();
+                            
+                            blasts.add(new Blast(shotX, shotY));
+                            
+                            Sound sound = SoundFactory.getInstance(alien_explodes);
+                            SoundFactory.play(sound);
+                        }
+            }
+            
             it = barriers.iterator();
             
             while(it.hasNext()) {
@@ -467,6 +497,15 @@ public class Board extends JPanel implements Runnable, Commons {
         // mothership
         if(mothership.isVisible()) {
         	mothership.act();
+        }
+        
+        //escorts 
+        Iterator es = escorts.iterator();
+
+        while (es.hasNext()) {
+            Escort escort = (Escort) es.next();
+
+            escort.act();
         }
         
         // aliens
